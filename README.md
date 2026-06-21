@@ -5,7 +5,7 @@
 **Contribution Number:** [1 / 2 / 3]  
 **Student:** [Robert Asumeng]  
 **Issue:** [[GitHub issue link](https://github.com/tqec/tqec/issues/690)]  
-**Status:** [Phase I / Phase II / Phase III] [Complete]
+**Status:** [Phase I] [Complete]
 
 ---
 
