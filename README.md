@@ -1,37 +1,36 @@
 # su26-ai301-contribution
 
-# Contribution [#]: [Issue Title]
+# Contribution [#216]: [Implement an option to control the opacity of blockgraph structures]
 
 **Contribution Number:** [1 / 2 / 3]  
-**Student:** [Your Name]  
-**Issue:** [GitHub issue link]  
-**Status:** [Phase I / Phase II / Phase III / Phase IV] [In Progress / Complete]
+**Student:** [Robert Asumeng]  
+**Issue:** [[GitHub issue link](https://github.com/tqec/tqec/issues/690)]  
+**Status:** [Phase I / Phase II / Phase III] [Complete]
 
 ---
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs explaining why this issue interests you, how it matches your skills/learning goals, what you hope to learn]
-
+I chose this issue because it aligned very well with me and my coding preferences, I personally prefer Python and the language is in python. Also the issue pertains to a QOL feature and I appreciate good QOL.
 ---
 
 ## Understanding the Issue
 
 ### Problem Description
 
-[In your own words, what's broken or missing?]
+The issue is that the Graphing system does not have the ability to control the opacity of the visual and the creator would like that implemented.
 
 ### Expected Behavior
 
-[What should happen?]
+The graphs opacity should be changeable
 
 ### Current Behavior
 
-[What actually happens?]
+The opacity isn't changeable
 
 ### Affected Components
 
-[Which parts of the codebase are involved?]
+Files in th src/tqec folder 
 
 ---
 
@@ -39,7 +38,12 @@
 
 ### Environment Setup
 
-[Notes on setting up your local development environment - challenges you faced, how you solved them]
+Currently, you need to install tqec from source with pip or uv:
+
+With pip:
+
+python -m pip install git+https://github.com/tqec/tqec.git
+
 
 ### Steps to Reproduce
 
