@@ -63,30 +63,54 @@ python -m pip install git+https://github.com/tqec/tqec.git
 
 ### Analysis
 
-[Your analysis of the root cause - what's causing the issue?]
+**Root cause:** `TQECColor.rgba` property (`src/tqec/interop/color.py:70-77`) hardcodes `alpha=1.0` for X/Y/Z/H face colors. `_BaseColladaData._add_materials()` (`src/tqec/interop/collada/read_write.py:455-478`) creates COLLADA `Effect` objects with `transparency=rgba[3]`, which is always 1.0. No opacity parameter flows through the call chain: `BlockGraph.to_dae_file()` → `write_block_graph_to_dae_file()` → `_BaseColladaData.__init__()` → `_add_materials()`.
+
+Only correlation surfaces (`X_CORRELATION`, `Z_CORRELATION`) use `alpha=0.8` — these should remain unchanged.
 
 ### Proposed Solution
 
-[High-level description of your fix approach]
+Thread an `opacity: float` parameter through the DAE export pipeline. Apply it as an alpha override on all non-correlation-surface materials only. Correlation surfaces preserve their intrinsic alpha (0.8) unchanged. This lets users see internal block structure in a single rendered image without washing out correlation surfaces.
 
 ### Implementation Plan
 
 Using UMPIRE framework (adapted):
 
-**Understand:** [Restate the problem]
+**Understand:** BlockGraph 3D visualization always renders blocks at 100% opacity. Users who want to export a single image showing internal structure (e.g., boundaries, internal pipes) cannot do so because no opacity parameter exists. The fix requires threading an opacity value from the public API through to the COLLADA material definitions, without affecting correlation surface visibility.
 
-**Match:** [What similar patterns/solutions exist in the codebase?]
+**Match:** The codebase already uses `RGBA.with_alpha()` (`src/tqec/interop/color.py:26`) but it's never called from the rendering pipeline. The `TQECColor` enum already demonstrates per-color alpha (correlation surfaces at 0.8 vs blocks at 1.0). This pattern extends naturally: apply a uniform alpha override at the material-creation step.
 
-**Plan:** [Step-by-step implementation plan]
-1. [Modify file X to do Y]
-2. [Add function Z]
-3. [Update tests]
+**Plan:**
+1. **`src/tqec/interop/collada/read_write.py`:**
+   - Add `opacity: float = 1.0` parameter to `write_block_graph_to_dae_file()`
+   - Store `self._opacity: float` in `_BaseColladaData.__init__()`
+   - In `_add_materials()`, when creating `Effect` for non-correlation colors, replace alpha with `self._opacity` using `face_color.rgba.with_alpha(self._opacity).as_floats()`
+   - Correlation surface colors keep intrinsic alpha unchanged
 
-**Implement:** [Link to your branch/commits as you work]
+2. **`src/tqec/computation/block_graph.py`:**
+   - Add `opacity: float = 1.0` to `to_dae_file()` signature, pass through
+   - Add `opacity: float = 1.0` to `view_as_html()` signature, pass through
 
-**Review:** [Self-review checklist - does it follow the project's contribution guidelines?]
+3. **`tests/interop/collada/read_write_test.py`:**
+   - Test default opacity produces `transparency=1.0` in DAE
+   - Test opacity=0.5 scales material transparency
+   - Test correlation surface opacity preserved (0.8) when block opacity is 0.5
+   - Test out-of-range opacity raises error
 
-**Evaluate:** [How will you verify it works?]
+**Implement:** `https://github.com/<your-fork>/tqec/tree/fix-issue-#690`
+
+**Review:** Self-review checklist:
+- [ ] Follows project code conventions (type hints, docstrings, ruff compliance)
+- [ ] No breaking changes to existing API (new parameter with default)
+- [ ] Test coverage for new parameter
+- [ ] `uv run pytest tests/` passes on all existing tests
+- [ ] `uv run ruff check src/` passes
+
+**Evaluate:** Verification steps:
+1. `uv run pytest tests/interop/collada/read_write_test.py -v` — all tests pass including new ones
+2. Parse generated DAE XML to assert material transparency values are correct
+3. Roundtrip test: write graph with opacity → read back → graph structure unchanged
+4. Manual visual check with `g.view_as_html(opacity=0.3)` in Jupyter
+5. Full test suite: `uv run pytest tests/ -m ""`
 
 ---
 
